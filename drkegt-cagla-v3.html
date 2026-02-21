@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Direksiyon Dersi Randevu — Çağla Orman</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff0f7;
+  --white:#ffffff;
+  --navy:#5c1a45;
+  --blue:#a0266e;
+  --blue2:#c2185b;
+  --sky:#e91e8c;
+  --accent:#f48fb1;
+  --accent2:#880e4f;
+  --green:#16a34a;
+  --green-light:#22c55e;
+  --text:#3b0a2e;
+  --muted:#9e607a;
+  --border:#f8c8dd;
+  --error:#dc2626;
+  --r:16px;
+  --font:'Plus Jakarta Sans',sans-serif;
+}
+
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── VIEWS ── */
+.view{display:none}.view.active{display:block}
+
+/* ════════════════════════
+   BOOKING
+════════════════════════ */
+#view-booking{max-width:480px;margin:0 auto;padding-bottom:5rem}
+
+/* Hero header */
+.hero-header{
+  background:linear-gradient(145deg,#5c1a45 0%,#a0266e 55%,#c2185b 100%);
+  padding:2rem 1.4rem 2.5rem;
+  position:relative;overflow:hidden;
+}
+.hero-header::before{
+  content:'';position:absolute;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(255,255,255,0.04);
+  top:-100px;right:-80px;
+}
+.hero-header::after{
+  content:'';position:absolute;
+  width:180px;height:180px;border-radius:50%;
+  background:rgba(245,166,35,0.12);
+  bottom:-60px;left:-40px;
+}
+.hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;position:relative;z-index:1}
+.brand-tag{font-size:0.65rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.5)}
+.admin-btn{font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:0.3rem 0.7rem;cursor:pointer;background:transparent;transition:all 0.2s}
+.admin-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+.hero-profile{display:flex;align-items:center;gap:1rem;position:relative;z-index:1}
+.avatar{
+  width:66px;height:66px;border-radius:50%;
+  background:white;
+  display:flex;align-items:center;justify-content:center;
+  border:3px solid rgba(255,255,255,0.4);
+  flex-shrink:0;
+  overflow:hidden;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2);
+}
+.hero-info{}
+.hero-name{font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-0.01em}
+.hero-role{font-size:0.75rem;color:rgba(255,255,255,0.6);font-weight:500;margin-top:0.1rem}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:0.3em;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  border-radius:99px;padding:0.2em 0.7em;
+  font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:rgba(255,255,255,0.7);margin-top:0.4rem;
+}
+.hero-badge .dot{width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 5px #4ade80}
+
+/* Progress bar */
+.prog-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:1rem 1.4rem;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(15,27,61,0.06)}
+.prog-labels{display:flex;justify-content:space-between;margin-bottom:0.5rem}
+.prog-labels span{font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);transition:color 0.3s}
+.prog-labels span.active{color:#c2185b}
+.prog-labels span.done{color:var(--border)}
+.prog-bg{height:3px;background:var(--border);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#c2185b,#f48fb1);border-radius:99px;transition:width 0.4s ease}
+
+/* Steps */
+.step{display:none;padding:1.4rem}.step.active{display:block;animation:fadeUp 0.3s ease both}
+.step-title{font-size:1.4rem;font-weight:800;line-height:1.2;margin-bottom:0.25rem;letter-spacing:-0.02em}
+.step-sub{font-size:0.82rem;color:var(--muted);font-weight:400;margin-bottom:1.4rem;line-height:1.5}
+
+/* Card */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 12px rgba(15,27,61,0.05)}
+.card-title{font-size:0.85rem;font-weight:700;color:#5c1a45;margin-bottom:1rem;letter-spacing:-0.01em}
+
+/* Service grid */
+
+
+/* Fields */
+.field{margin-bottom:1rem}.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  font-family:var(--font);font-size:0.93rem;font-weight:500;color:var(--text);
+  padding:0.72rem 1rem;outline:none;transition:all 0.2s;-webkit-appearance:none;appearance:none;
+}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.5rem}
+.field select option{background:#fff}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#c2185b;box-shadow:0 0 0 3px rgba(37,87,214,0.1);background:#fff}
+.field input.err,.field select.err{border-color:var(--error)}
+.field textarea{resize:none;min-height:72px;line-height:1.5}
+.field input::placeholder,.field textarea::placeholder{color:#b0bac9}
+.err-msg{font-size:0.68rem;color:var(--error);font-weight:700;margin-top:0.3rem;display:none}
+.err-msg.show{display:block}
+
+/* Level chips */
+.level-chips{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem}
+.lchip{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:20px;
+  font-size:0.75rem;font-weight:700;padding:0.35rem 0.85rem;
+  cursor:pointer;color:var(--muted);transition:all 0.2s;-webkit-tap-highlight-color:transparent;
+}
+.lchip.sel{background:#fde8f3;border-color:#c2185b;color:#c2185b}
+
+/* Time slots */
+.times-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem}
+.tslot{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:9px;
+  padding:0.5rem 0;text-align:center;font-size:0.78rem;font-weight:700;
+  cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;color:var(--text);
+}
+.tslot:active{transform:scale(0.93)}
+.tslot.sel{background:#c2185b;border-color:#c2185b;color:#fff}
+.tslot.taken{opacity:0.3;cursor:not-allowed;text-decoration:line-through;font-size:0.7rem}
+
+/* Info pill */
+.info-pill{background:#fde8f3;border:1px solid #c7d7fa;border-radius:10px;padding:0.7rem 0.9rem;font-size:0.78rem;color:#880e4f;font-weight:500;line-height:1.5;margin-bottom:1rem}
+.info-pill strong{display:block;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.2rem;color:#c2185b}
+
+/* Summary */
+.sum-row{display:flex;justify-content:space-between;align-items:flex-start;padding:0.65rem 0;border-bottom:1px solid var(--border);gap:1rem}
+.sum-row:last-child{border-bottom:none}
+.sum-k{font-size:0.65rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+.sum-v{font-size:0.88rem;font-weight:600;text-align:right;color:var(--text)}
+
+/* Buttons */
+.btn{width:100%;border:none;border-radius:12px;font-family:var(--font);font-size:0.95rem;font-weight:700;padding:0.9rem;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:linear-gradient(135deg,#a0266e,#c2185b);color:#fff;box-shadow:0 6px 24px rgba(194,24,91,0.3)}
+.btn-primary:hover{box-shadow:0 8px 28px rgba(194,24,91,0.4)}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--muted);margin-top:0.5rem}
+.btn-ghost:hover{border-color:var(--muted);color:var(--text)}
+.btn-wa{background:linear-gradient(135deg,#25d366,#16a34a);color:#fff;box-shadow:0 6px 20px rgba(37,211,102,0.3);display:flex;align-items:center;justify-content:center;gap:0.6rem;font-size:1rem}
+.btn-wa svg{width:20px;height:20px;fill:#fff;flex-shrink:0}
+
+/* ════════════════════════
+   ADMIN
+════════════════════════ */
+#view-admin{min-height:100vh}
+
+.admin-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 1.4rem;
+  background:linear-gradient(135deg,#5c1a45,#a0266e);
+  position:sticky;top:0;z-index:50;
+}
+.admin-hdr h2{font-size:1rem;font-weight:800;color:#fff;letter-spacing:-0.01em}
+.admin-hdr h2 span{color:var(--accent)}
+
+.admin-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border)}
+.atab{flex:1;padding:0.75rem;text-align:center;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s}
+.atab.active{color:#c2185b;border-bottom-color:#c2185b}
+
+.admin-body{padding:1.2rem 1.4rem;background:var(--bg);min-height:calc(100vh - 100px)}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-bottom:1.2rem}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1rem}
+.stat-num{font-size:1.9rem;font-weight:800;color:#c2185b}
+.stat-lbl{font-size:0.65rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-top:0.15rem}
+
+.filter-bar{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.8rem}
+.fchip{background:var(--white);border:1.5px solid var(--border);border-radius:20px;font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:0.3rem 0.75rem;cursor:pointer;color:var(--muted);transition:all 0.2s}
+.fchip.active{border-color:#c2185b;color:#c2185b;background:#fde8f3}
+
+.date-fi{width:100%;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:0.85rem;font-weight:600;color:var(--text);padding:0.6rem 0.9rem;outline:none;-webkit-appearance:none;margin-bottom:1rem}
+.date-fi:focus{border-color:#c2185b}
+
+.apt-list{display:flex;flex-direction:column;gap:0.7rem}
+.apt{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;animation:fadeUp 0.3s ease both}
+.apt.status-pending .abadge{background:#fff7ed;color:#c2770a}
+.apt.status-confirmed .abadge{background:#f0fdf4;color:var(--green)}
+.apt.status-cancelled .abadge{background:#fef2f2;color:var(--error);opacity:0.7}
+.apt-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem}
+.apt-name{font-size:0.98rem;font-weight:800;color:#5c1a45}
+.abadge{font-size:0.58rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.22rem 0.55rem;border-radius:20px}
+.apt-meta{display:flex;flex-wrap:wrap;gap:0.3rem 0.8rem;margin-bottom:0.7rem}
+.apt-meta span{font-size:0.76rem;color:var(--muted);font-weight:500}
+.apt-meta span b{color:var(--text)}
+.apt-note{font-size:0.75rem;color:var(--muted);font-style:italic;margin-bottom:0.7rem;line-height:1.4}
+.apt-acts{display:flex;gap:0.45rem}
+.abt{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:0.68rem;font-weight:700;padding:0.42rem;cursor:pointer;color:var(--muted);transition:all 0.2s;letter-spacing:0.04em;text-transform:uppercase}
+.abt.confirm{border-color:rgba(34,197,94,0.4);color:var(--green)}.abt.confirm:hover{background:#f0fdf4}
+.abt.cancel{border-color:rgba(220,38,38,0.4);color:var(--error)}.abt.cancel:hover{background:#fef2f2}
+.abt.wa{border-color:rgba(34,197,94,0.4);color:var(--green)}.abt.wa:hover{background:#f0fdf4}
+
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty .ei{font-size:2.5rem;margin-bottom:0.7rem}
+
+/* Settings */
+.set-sec{margin-bottom:1.5rem}
+.set-sec h3{font-size:0.78rem;font-weight:800;color:#c2185b;margin-bottom:0.75rem;letter-spacing:0.04em;text-transform:uppercase}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* PIN Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(6px)}
+.modal-bg.hide{display:none}
+.modal{background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:320px;text-align:center}
+.modal h3{font-size:1.2rem;font-weight:800;color:#5c1a45;margin-bottom:0.3rem}
+.modal p{font-size:0.8rem;color:var(--muted);margin-bottom:1.4rem}
+.pin-in{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:1.5rem;font-weight:800;color:#c2185b;padding:0.7rem;text-align:center;outline:none;letter-spacing:0.4em;margin-bottom:0.8rem}
+.pin-in:focus{border-color:#c2185b}
+.pin-err{font-size:0.72rem;color:var(--error);font-weight:700;margin-bottom:0.8rem;display:none}
+.pin-err.show{display:block}
+
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- ══ PIN MODAL ══ -->
+<div class="modal-bg hide" id="pin-modal">
+  <div class="modal">
+    <div style="font-size:2rem;margin-bottom:0.5rem">🔐</div>
+    <h3>Admin Girişi</h3>
+    <p>Devam etmek için PIN kodunuzu girin.</p>
+    <input class="pin-in" type="password" id="pin-inp" maxlength="6" inputmode="numeric" placeholder="••••">
+    <div class="pin-err" id="pin-err">Yanlış PIN.</div>
+    <button class="btn btn-primary" onclick="checkPin()">Giriş</button>
+    <button class="btn btn-ghost" onclick="closePinModal()">İptal</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     BOOKING VIEW
+══════════════════════════════════ -->
+<div class="view active" id="view-booking">
+
+  <!-- Hero -->
+  <div class="hero-header">
+    <div class="hero-top">
+      <span class="brand-tag">drkegt.cagla</span>
+      <button class="admin-btn" onclick="openAdmin()">⚙ Admin</button>
+    </div>
+    <div class="hero-profile">
+      <div class="avatar"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="58" height="58">
+          <circle cx="50" cy="50" r="50" fill="#e30a17"/>
+          <circle cx="50" cy="50" r="46" fill="none" stroke="white" stroke-width="1.5" opacity="0.6"/>
+          <!-- Açık kitap gövdesi -->
+          <path d="M20 37 Q35 33 50 37 L50 70 Q35 66 20 70 Z" fill="white" opacity="0.93"/>
+          <path d="M50 37 Q65 33 80 37 L80 70 Q65 66 50 70 Z" fill="white" opacity="0.93"/>
+          <rect x="48" y="35" width="4" height="37" rx="2" fill="#e30a17"/>
+          <!-- Sol sayfa çizgiler -->
+          <rect x="26" y="44" width="19" height="1.8" rx="0.9" fill="#e30a17" opacity="0.35"/>
+          <rect x="26" y="50" width="16" height="1.8" rx="0.9" fill="#e30a17" opacity="0.35"/>
+          <rect x="26" y="56" width="18" height="1.8" rx="0.9" fill="#e30a17" opacity="0.35"/>
+          <rect x="26" y="62" width="13" height="1.8" rx="0.9" fill="#e30a17" opacity="0.35"/>
+          <!-- Sağ sayfa çizgiler -->
+          <rect x="55" y="44" width="19" height="1.8" rx="0.9" fill="#e30a17" opacity="0.35"/>
+          <rect x="55" y="50" width="16" height="1.8" rx="0.9" fill="#e30a17" opacity="0.35"/>
+          <rect x="55" y="56" width="18" height="1.8" rx="0.9" fill="#e30a17" opacity="0.35"/>
+          <rect x="55" y="62" width="13" height="1.8" rx="0.9" fill="#e30a17" opacity="0.35"/>
+          <!-- Ay -->
+          <path d="M52 14 A12 12 0 1 0 52 26 A8.5 8.5 0 1 1 52 14Z" fill="white"/>
+          <!-- Yıldız -->
+          <polygon points="68,12 69.9,18 76,18 71,21.5 73,27.5 68,24 63,27.5 65,21.5 60,18 66.1,18" fill="white"/>
+        </svg></div>
+      <div class="hero-info">
+        <div class="hero-name">Çağla Orman</div>
+        <div class="hero-role">Direksiyon Öğretmeni · Yaşam Sürücü Kursu</div>
+        <div class="hero-badge"><span class="dot"></span>09:00 – 16:00 Aktif</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-wrap">
+    <div class="prog-labels">
+      <span id="pl-1" class="active">Seviye</span>
+      <span id="pl-2">Tarih</span>
+      <span id="pl-3">Bilgiler</span>
+      <span id="pl-4">Özet</span>
+    </div>
+    <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:25%"></div></div>
+  </div>
+
+  <!-- ── ADIM 1: Bilgi ── -->
+  <div class="step active" id="step-1">
+    <div class="step-title">Merhaba 👋</div>
+    <div class="step-sub">Bireysel direksiyon dersi randevusu oluşturalım.</div>
+
+    <div class="card" style="display:flex;align-items:center;gap:1rem;padding:1.1rem">
+      <div style="font-size:2.2rem">🚗</div>
+      <div>
+        <div style="font-size:0.92rem;font-weight:800;color:#5c1a45">Bireysel Direksiyon Dersi</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.15rem">50 dakika · Çağla Orman</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>Deneyim Seviyesi *</label>
+        <div class="level-chips" id="level-chips">
+          <div class="lchip" data-v="Başlangıç">🟢 Başlangıç</div>
+          <div class="lchip" data-v="Orta">🟡 Orta</div>
+          <div class="lchip" data-v="İleri">🔵 İleri</div>
+        </div>
+        <p class="err-msg" id="err-level">Lütfen deneyim seviyesi seçin.</p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="goTo(2)">Devam →</button>
+  </div>
+
+  <!-- ── ADIM 2: Tarih & Saat ── -->
+  <div class="step" id="step-2">
+    <div class="step-title">Tarih & Saat</div>
+    <div class="step-sub">Uygun gün ve saati belirleyin.</div>
+
+    <div class="info-pill">
+      <strong>🕐 Çalışma Saatleri</strong>
+      Çağla Orman — Hafta içi 09:00 – 16:00
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>Randevu Tarihi</label>
+        <input type="date" id="inp-date">
+        <p class="err-msg" id="err-date">Lütfen bir tarih seçin.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Müsait Saatler</div>
+      <div class="times-grid" id="times-grid"></div>
+      <p class="err-msg" id="err-time">Lütfen bir saat seçin.</p>
+    </div>
+
+    <button class="btn btn-primary" onclick="goTo(3)">Devam →</button>
+    <button class="btn btn-ghost" onclick="goTo(1)">← Geri</button>
+  </div>
+
+  <!-- ── ADIM 3: Bilgiler ── -->
+  <div class="step" id="step-3">
+    <div class="step-title">Bilgileriniz</div>
+    <div class="step-sub">Sizi tanımak için birkaç bilgiye ihtiyacımız var.</div>
+
+    <div class="card">
+      <div class="field">
+        <label>Ad Soyad *</label>
+        <input type="text" id="inp-name" placeholder="Adınız Soyadınız">
+        <p class="err-msg" id="err-name">Ad soyad gerekli.</p>
+      </div>
+      <div class="field">
+        <label>Telefon *</label>
+        <input type="tel" id="inp-phone" placeholder="05XX XXX XX XX">
+        <p class="err-msg" id="err-phone">Geçerli telefon girin.</p>
+      </div>
+      <div class="field">
+        <label>Not <small style="text-transform:none;letter-spacing:0;font-weight:400">(isteğe bağlı)</small></label>
+        <textarea id="inp-note" placeholder="Özel isteğiniz veya sormak istediğiniz bir şey var mı?"></textarea>
+      </div>
+    </div>
+
+    <div class="info-pill">
+      <strong>📲 Onay Bilgisi</strong>
+      Randevunuz Çağla Orman'a WhatsApp üzerinden iletilecek ve onay mesajı alacaksınız.
+    </div>
+
+    <button class="btn btn-primary" onclick="goTo(4)">Özeti Gör →</button>
+    <button class="btn btn-ghost" onclick="goTo(2)">← Geri</button>
+  </div>
+
+  <!-- ── ADIM 4: Özet ── -->
+  <div class="step" id="step-4">
+    <div class="step-title">Randevu Özeti</div>
+    <div class="step-sub">Her şey doğru mu? Kontrol edin.</div>
+
+    <div class="card" id="sum-card"></div>
+
+    <button class="btn btn-wa" onclick="sendWA()">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.121 1.534 5.856L0 24l6.334-1.508A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-4.999-1.366l-.358-.213-3.758.894.952-3.655-.234-.374A9.818 9.818 0 012.182 12C2.182 6.573 6.573 2.182 12 2.182S21.818 6.573 21.818 12 17.427 21.818 12 21.818z"/></svg>
+      WhatsApp ile Randevu Gönder
+    </button>
+    <button class="btn btn-ghost" onclick="goTo(3)">← Bilgileri Düzenle</button>
+  </div>
+
+</div><!-- /#view-booking -->
+
+<!-- ══════════════════════════════════
+     ADMIN VIEW
+══════════════════════════════════ -->
+<div class="view" id="view-admin">
+  <div class="admin-hdr">
+    <h2>Admin <span>Paneli</span></h2>
+    <button class="admin-btn" style="color:rgba(255,255,255,0.5)" onclick="showView('booking')">← Geri Dön</button>
+  </div>
+
+  <div class="admin-tabs">
+    <div class="atab active" onclick="switchTab('randevular')">📋 Randevular</div>
+    <div class="atab" onclick="switchTab('ayarlar')">⚙ Ayarlar</div>
+  </div>
+
+  <div class="admin-body">
+
+    <div class="tab-content active" id="tab-randevular">
+      <div class="stats-grid" id="stats-grid"></div>
+
+      <div class="filter-bar" id="status-filter">
+        <div class="fchip active" data-s="all">Tümü</div>
+        <div class="fchip" data-s="pending">Bekliyor</div>
+        <div class="fchip" data-s="confirmed">Onaylı</div>
+        <div class="fchip" data-s="cancelled">İptal</div>
+      </div>
+
+      <input type="date" class="date-fi" id="date-filter">
+      <div class="apt-list" id="apt-list"></div>
+    </div>
+
+    <div class="tab-content" id="tab-ayarlar">
+      <div class="set-sec">
+        <h3>📞 WhatsApp Numarası</h3>
+        <div class="field"><label>Numara (90 ile başlar, boşluksuz)</label><input type="tel" id="set-wa" placeholder="905346629867"></div>
+      </div>
+      <div class="set-sec">
+        <h3>🔐 Admin PIN</h3>
+        <div class="field"><label>Yeni PIN (4-6 rakam)</label><input type="password" id="set-pin" maxlength="6" inputmode="numeric" placeholder="••••"></div>
+      </div>
+      <div class="set-sec">
+        <h3>⏰ Aktif Saatler</h3>
+        <div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;padding:1rem" id="hours-grid"></div>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">💾 Kaydet</button>
+      <button class="btn btn-ghost" style="margin-top:0.5rem;font-size:0.75rem;color:var(--error);border-color:rgba(220,38,38,0.25)" onclick="clearAll()">🗑 Tüm Randevuları Temizle</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+//  SUPABASE
+// ═══════════════════════════════════
+const SUPA_URL = 'https://hxykftlkmwvcozzxyjjb.supabase.co';
+const SUPA_KEY = 'sb_publishable_r5FCfzoKaZT2AoP5OSuasg_nbkybgvS';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ═══════════════════════════════════
+//  SABİT BİLGİLER
+// ═══════════════════════════════════
+const TEACHER = {
+  ad:    'Çağla Orman',
+  kurum: 'Yaşam Sürücü Kursu',
+  slug:  'drkegt.cagla',
+  wa:    '905346629867',
+};
+
+const DERSLER = [
+  {id:'d1', icon:'🚗', ad:'Bireysel Ders',      sure:'50 dk'},
+  {id:'d2', icon:'🅿️', ad:'Park & Manevra',     sure:'50 dk'},
+  {id:'d3', icon:'🏙️', ad:'Şehir İçi Sürüş',   sure:'50 dk'},
+  {id:'d4', icon:'📋', ad:'Sınav Hazırlık',      sure:'50 dk'},
+];
+
+const SAATLER = ['09:00','09:30','10:00','10:30','11:00','11:30',
+                 '13:00','13:30','14:00','14:30','15:00','15:30'];
+
+// ═══════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════
+function ls(k,d=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}}
+function ss(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getCfg(){return ls('cagla_cfg',{wa:TEACHER.wa,adminPin:'1234',saatler:SAATLER})}
+function saveCfg(c){ss('cagla_cfg',c)}
+function getApts(){return ls('cagla_apts',[])}
+function saveApts(a){ss('cagla_apts',a)}
+
+// ═══════════════════════════════════
+//  STATE
+// ═══════════════════════════════════
+let S={ders:null,ehliyet:'',seviye:'',tarih:null,saat:null,ad:'',telefon:'',not:''};
+let curStep=1;
+let filterStatus='all';
+let filterDate='';
+
+// ═══════════════════════════════════
+//  VIEWS
+// ═══════════════════════════════════
+async function showView(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  if(v==='admin') await renderAdmin();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════
+//  STEPS
+// ═══════════════════════════════════
+const pw={1:'25%',2:'50%',3:'75%',4:'100%'};
+
+function goTo(n){
+  if(n>curStep&&!validate(curStep)) return;
+  document.getElementById('step-'+curStep).classList.remove('active');
+  document.getElementById('step-'+n).classList.add('active');
+  curStep=n;
+  document.getElementById('prog-fill').style.width=pw[n];
+  ['pl-1','pl-2','pl-3','pl-4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.className=i+1<n?'done':i+1===n?'active':'';
+  });
+  if(n===2) renderTimes();
+  if(n===4) renderSum();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function validate(step){
+  if(step===1){
+    const l=!!S.seviye;
+    document.getElementById('err-level').classList.toggle('show',!l);
+    return l;
+  }
+  if(step===2){
+    const d=!!S.tarih,t=!!S.saat;
+    document.getElementById('err-date').classList.toggle('show',!d);
+    document.getElementById('err-time').classList.toggle('show',!t);
+    return d&&t;
+  }
+  if(step===3){
+    const ad=document.getElementById('inp-name').value.trim();
+    const tel=document.getElementById('inp-phone').value.trim();
+    S.ad=ad;S.telefon=tel;S.not=document.getElementById('inp-note').value.trim();
+    const aOk=ad.length>=2;
+    const tOk=/^[0-9+\s\-()]{10,15}$/.test(tel);
+    document.getElementById('inp-name').classList.toggle('err',!aOk);
+    document.getElementById('inp-phone').classList.toggle('err',!tOk);
+    document.getElementById('err-name').classList.toggle('show',!aOk);
+    document.getElementById('err-phone').classList.toggle('show',!tOk);
+    return aOk&&tOk;
+  }
+  return true;
+}
+
+// ═══════════════════════════════════
+//  DERS SEÇİMİ
+// ═══════════════════════════════════
+// Tek ders — otomatik seçili
+function renderSrvGrid(){}
+function selDers(id){}
+
+// Level chips
+document.querySelectorAll('.lchip').forEach(c=>{
+  c.onclick=()=>{
+    document.querySelectorAll('.lchip').forEach(x=>x.classList.remove('sel'));
+    c.classList.add('sel');
+    S.seviye=c.dataset.v;
+    document.getElementById('err-level').classList.remove('show');
+  };
+});
+
+// ═══════════════════════════════════
+//  TARİH & SAAT
+// ═══════════════════════════════════
+function initDate(){
+  const inp=document.getElementById('inp-date');
+  const today=new Date().toISOString().split('T')[0];
+  inp.min=today;
+  if(S.tarih) inp.value=S.tarih;
+  inp.addEventListener('change',async()=>{
+    S.tarih=inp.value;S.saat=null;
+    document.getElementById('err-date').classList.remove('show');
+    await renderTimes();
+  });
+}
+
+async function renderTimes(){
+  const cfg=getCfg();
+  const {data:aptData}=await supa.from('randevular').select('saat').eq('tarih',S.tarih||'').neq('status','cancelled');
+  const taken=(aptData||[]).map(a=>a.saat);
+  document.getElementById('times-grid').innerHTML=cfg.saatler.map(s=>{
+    const isTaken=taken.includes(s);
+    const isSel=S.saat===s;
+    return `<div class="tslot${isSel?' sel':''}${isTaken?' taken':''}" onclick="${isTaken?'':'selSaat(\''+s+'\')'}">${s}</div>`;
+  }).join('');
+}
+function selSaat(s){
+  S.saat=s;
+  document.getElementById('err-time').classList.remove('show');
+  renderTimes();
+}
+
+// ═══════════════════════════════════
+//  ÖZET
+// ═══════════════════════════════════
+function renderSum(){
+  const tarihStr=new Date(S.tarih+'T12:00').toLocaleDateString('tr-TR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('sum-card').innerHTML=`
+    <div class="sum-row"><span class="sum-k">Öğretmen</span><span class="sum-v">Çağla Orman</span></div>
+    <div class="sum-row"><span class="sum-k">Ders</span><span class="sum-v">${S.ders?.icon} ${S.ders?.ad}</span></div>
+    <div class="sum-row"><span class="sum-k">Seviye</span><span class="sum-v">${S.seviye}</span></div>
+    <div class="sum-row"><span class="sum-k">Tarih</span><span class="sum-v">${tarihStr}</span></div>
+    <div class="sum-row"><span class="sum-k">Saat</span><span class="sum-v">🕐 ${S.saat}</span></div>
+    <div class="sum-row"><span class="sum-k">Ad Soyad</span><span class="sum-v">${S.ad}</span></div>
+    <div class="sum-row"><span class="sum-k">Telefon</span><span class="sum-v">${S.telefon}</span></div>
+    ${S.not?`<div class="sum-row"><span class="sum-k">Not</span><span class="sum-v">${S.not}</span></div>`:''}
+  `;
+}
+
+// ═══════════════════════════════════
+//  WHATSAPP GÖNDER
+// ═══════════════════════════════════
+async function sendWA(){
+  const cfg=getCfg();
+  const tarihStr=new Date(S.tarih+'T12:00').toLocaleDateString('tr-TR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const msg=[
+    `🚗 *YENİ DİREKSİYON DERSİ RANDEVUSU*`,
+    `📍 ${TEACHER.kurum} · ${TEACHER.slug}`,
+    `━━━━━━━━━━━━━━━━`,
+    `📋 *Ders:* ${S.ders?.ad}`,
+    `📊 *Seviye:* ${S.seviye}`,
+    `📅 *Tarih:* ${tarihStr}`,
+    `🕐 *Saat:* ${S.saat}`,
+    `━━━━━━━━━━━━━━━━`,
+    `👤 *Ad Soyad:* ${S.ad}`,
+    `📞 *Telefon:* ${S.telefon}`,
+    S.not?`💬 *Not:* ${S.not}`:null,
+    `━━━━━━━━━━━━━━━━`,
+    `✅ Lütfen randevuyu onaylayın.`,
+  ].filter(Boolean).join('\n');
+
+  // Supabase'e kaydet
+  await supa.from('randevular').insert({
+    ders: S.ders?.ad,
+    ders_icon: S.ders?.icon,
+    seviye: S.seviye,
+    tarih: S.tarih,
+    saat: S.saat,
+    ad: S.ad,
+    telefon: S.telefon,
+    notlar: S.not,
+    status: 'pending',
+  });
+
+  window.open(`https://wa.me/${cfg.wa}?text=${encodeURIComponent(msg)}`,'_blank');
+
+  // Reset
+  S={ders:DERSLER[0],ehliyet:'',seviye:'',tarih:null,saat:null,ad:'',telefon:'',not:''};
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-phone').value='';
+  document.getElementById('inp-note').value='';
+
+  document.querySelectorAll('.lchip').forEach(c=>c.classList.remove('sel'));
+  renderSrvGrid();
+  goTo(1);
+}
+
+// ═══════════════════════════════════
+//  ADMIN — PIN
+// ═══════════════════════════════════
+function openAdmin(){
+  document.getElementById('pin-modal').classList.remove('hide');
+  document.getElementById('pin-inp').value='';
+  document.getElementById('pin-err').classList.remove('show');
+  setTimeout(()=>document.getElementById('pin-inp').focus(),100);
+}
+function closePinModal(){document.getElementById('pin-modal').classList.add('hide')}
+function checkPin(){
+  if(document.getElementById('pin-inp').value===getCfg().adminPin){
+    closePinModal();showView('admin');
+  } else {
+    document.getElementById('pin-err').classList.add('show');
+    document.getElementById('pin-inp').value='';
+    document.getElementById('pin-inp').focus();
+  }
+}
+document.getElementById('pin-inp').addEventListener('keydown',e=>{if(e.key==='Enter')checkPin()});
+
+// ═══════════════════════════════════
+//  ADMIN — TABS
+// ═══════════════════════════════════
+function switchTab(name){
+  ['randevular','ayarlar'].forEach((t,i)=>{
+    document.querySelectorAll('.atab')[i].classList.toggle('active',t===name);
+    document.getElementById('tab-'+t).classList.toggle('active',t===name);
+  });
+  if(name==='randevular') renderAdmin();
+  if(name==='ayarlar') renderSettings();
+}
+
+// ═══════════════════════════════════
+//  ADMIN — RENDER
+// ═══════════════════════════════════
+async function renderAdmin(){
+  document.getElementById('apt-list').innerHTML='<div class="empty"><div class="ei">⏳</div><p>Yükleniyor...</p></div>';
+
+  let query = supa.from('randevular').select('*').order('olusturma',{ascending:false});
+  if(filterStatus!=='all') query=query.eq('status',filterStatus);
+  if(filterDate) query=query.eq('tarih',filterDate);
+  const {data:apts,error}=await query;
+  if(error){document.getElementById('apt-list').innerHTML='<div class="empty"><p>Hata: '+error.message+'</p></div>';return;}
+
+  const today=new Date().toISOString().split('T')[0];
+  const {data:all}=await supa.from('randevular').select('*');
+  const allApts=all||[];
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat"><div class="stat-num">${allApts.length}</div><div class="stat-lbl">Toplam</div></div>
+    <div class="stat"><div class="stat-num">${allApts.filter(a=>a.tarih===today).length}</div><div class="stat-lbl">Bugün</div></div>
+    <div class="stat"><div class="stat-num">${allApts.filter(a=>a.status==='pending').length}</div><div class="stat-lbl">Bekliyor</div></div>
+    <div class="stat"><div class="stat-num">${allApts.filter(a=>a.status==='confirmed').length}</div><div class="stat-lbl">Onaylı</div></div>`;
+
+  document.querySelectorAll('#status-filter .fchip').forEach(c=>{
+    c.classList.toggle('active',c.dataset.s===filterStatus);
+    c.onclick=()=>{filterStatus=c.dataset.s;renderAdmin()};
+  });
+  const df=document.getElementById('date-filter');
+  df.value=filterDate;
+  df.onchange=()=>{filterDate=df.value;renderAdmin()};
+
+  const el=document.getElementById('apt-list');
+  if(!apts||!apts.length){
+    el.innerHTML='<div class="empty"><div class="ei">🗂</div><p>Randevu bulunamadı.</p></div>';return;
+  }
+  const sl={pending:'Bekliyor',confirmed:'Onaylı',cancelled:'İptal'};
+  el.innerHTML=apts.map(a=>{
+    const tarihStr=new Date(a.tarih+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+    return `<div class="apt status-${a.status}">
+      <div class="apt-top"><div class="apt-name">${a.ad}</div><span class="abadge">${sl[a.status]||a.status}</span></div>
+      <div class="apt-meta">
+        <span>${a.ders_icon||'🚗'} <b>${a.ders||''}</b></span>
+        <span>📊 <b>${a.seviye||''}</b></span>
+        <span>📅 <b>${tarihStr}</b></span>
+        <span>🕐 <b>${a.saat||''}</b></span>
+        <span>📞 ${a.telefon||''}</span>
+      </div>
+      ${a.notlar?'<div class="apt-note">💬 '+a.notlar+'</div>':''}
+      <div class="apt-acts">
+        ${a.status!=='confirmed'?`<button class="abt confirm" onclick="setStatus('${a.id}','confirmed')">✓ Onayla</button>`:''}
+        ${a.status!=='cancelled'?`<button class="abt cancel" onclick="setStatus('${a.id}','cancelled')">✕ İptal</button>`:''}
+        <button class="abt wa" onclick="waConfirm('${a.id}')">📲 WA</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function setStatus(id,status){
+  await supa.from('randevular').update({status}).eq('id',id);
+  renderAdmin();
+}
+
+async function waConfirm(id){
+  const {data}=await supa.from('randevular').select('*').eq('id',id).single();
+  const a=data;if(!a) return;
+  const cfg=getCfg();
+  const tarihStr=new Date(a.tarih+'T12:00').toLocaleDateString('tr-TR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const statusTxt=a.status==='confirmed'?'✅ Randevunuz onaylanmıştır.':'❌ Randevunuz iptal edilmiştir.';
+  const msg=`${statusTxt}\n━━━━━━━━━━\n📋 Ders: ${a.ders}\n📅 Tarih: ${tarihStr}\n🕐 Saat: ${a.saat}\n━━━━━━━━━━\nÇağla Orman · ${TEACHER.kurum}`;
+  const tel=(a.telefon||"").replace(/\D/g,'');
+  const num=tel.startsWith('0')?'90'+tel.slice(1):tel.startsWith('90')?tel:'90'+tel;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// ═══════════════════════════════════
+//  ADMIN — SETTINGS
+// ═══════════════════════════════════
+function renderSettings(){
+  const cfg=getCfg();
+  document.getElementById('set-wa').value=cfg.wa||'';
+  document.getElementById('set-pin').value='';
+  document.getElementById('hours-grid').innerHTML=SAATLER.map((s,i)=>`
+    <div style="display:flex;align-items:center;gap:0.4rem">
+      <input type="checkbox" id="h${i}" ${cfg.saatler.includes(s)?'checked':''} style="accent-color:#c2185b;width:15px;height:15px" data-time="${s}">
+      <label for="h${i}" style="font-size:0.8rem;font-weight:600;cursor:pointer;color:var(--text)">${s}</label>
+    </div>`).join('');
+}
+
+function saveSettings(){
+  const cfg=getCfg();
+  const wa=document.getElementById('set-wa').value.trim();
+  const pin=document.getElementById('set-pin').value.trim();
+  if(wa) cfg.wa=wa;
+  if(pin.length>=4) cfg.adminPin=pin;
+  cfg.saatler=[];
+  document.querySelectorAll('#hours-grid input[type=checkbox]').forEach(cb=>{if(cb.checked)cfg.saatler.push(cb.dataset.time)});
+  saveCfg(cfg);
+  alert('✅ Ayarlar kaydedildi!');
+}
+
+async function clearAll(){
+  if(confirm('Tüm randevular silinecek. Emin misiniz?')){
+    await supa.from('randevular').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    renderAdmin();
+  }
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+// Her açılışta numarayı güncelle (localStorage eski değer tutmasın)
+const _existing = ls('cagla_cfg', {});
+saveCfg({
+  adminPin: _existing.adminPin || '1234',
+  saatler:  _existing.saatler  || SAATLER,
+  wa:       TEACHER.wa,   // numara her zaman sabit
+});
+S.ders=DERSLER[0]; // Tek ders otomatik seçili
+renderSrvGrid();
+initDate();
+renderTimes();
+</script>
+</body>
+</html>
